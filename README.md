@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🏷️ Label Creator Pro
 
 **Complete label design, barcode/QR generation, batch import, and printing solution for iPhone Spare Parts & Service Centers.**
@@ -188,3 +189,6 @@ See `backend/.env.example`:
 ---
 
 MIT © Label Creator Pro
+=======
+# label-creator-pro
+>>>>>>> f000745cdc85da9e0f03de762d7fe4c79a094c32
