@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  password     String
+  fullName     String
+  role         String        @default("staff")
+  email        String?
+  phone        String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  labels       Label[]
+  templates    Template[]
+  prints       PrintHistory[]
+  recentLabels RecentLabel[]
+}
+
+model Label {
+  id           String        @id @default(cuid())
+  name         String
+  width        Float         @default(50)
+  height       Float         @default(25)
+  background   String        @default("#ffffff")
+  elements     String        @default("[]")
+  data         String        @default("{}")
+  settings     String        @default("{}")
+  createdById  String?
+  createdBy    User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  prints       PrintHistory[]
+  recentLabels RecentLabel[]
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  width       Float    @default(50)
+  height      Float    @default(25)
+  background  String   @default("#ffffff")
+  elements    String   @default("[]")
+  data        String   @default("{}")
+  settings    String   @default("{}")
+  isDefault   Boolean  @default(false)
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PrintHistory {
+  id          String   @id @default(cuid())
+  labelId     String?
+  label       Label?   @relation(fields: [labelId], references: [id], onDelete: SetNull)
+  labelName   String
+  copies      Int      @default(1)
+  printerType String   @default("thermal")
+  status      String   @default("completed")
+  format      String   @default("pdf")
+  count       Int      @default(1)
+  details     String?
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+}
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String   @default("#0a84ff")
+  createdAt DateTime @default(now())
+}
+
+model RecentLabel {
+  id       String   @id @default(cuid())
+  userId   String
+  labelId  String
+  openedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label    Label    @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, labelId])
+}
+
