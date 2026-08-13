@@ -25,10 +25,10 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 const allowedOrigins = [
-  "https://label-creator-izg36aihc-smart-2077.vercel.app",
-  "https://label-creator-pro.vercel.app",
+  "https://label-creator-goqvsj5te-smart-2077.vercel.app",
   "https://label-creator-5mtvc5aus-smart-2077.vercel.app",
   "https://label-creator-izg36aihc-smart-2077.vercel.app",
+  "https://label-creator-pro.vercel.app",
   "http://localhost:5173",
   "http://localhost:3000",
 ];
