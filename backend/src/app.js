@@ -18,90 +18,121 @@ const renderRoutes = require("./routes/render.routes");
 
 const app = express();
 
-// Ensure uploads dir exists
+/* =========================================================
+   UPLOADS DIRECTORY
+   ========================================================= */
+
 const uploadDir = path.join(__dirname, "..", "uploads");
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const allowedOrigins = [
-  "https://label-creator-goqvsj5te-smart-2077.vercel.app",
-  "https://label-creator-pro-six.vercel.app",
-  "https://label-creator-5mtvc5aus-smart-2077.vercel.app",
-  "https://label-creator-izg36aihc-smart-2077.vercel.app",
-  "https://label-creator-pro.vercel.app",
-  "https://label-creator-goqvsj5te-smart-2077.vercel.app",
-  "http://localhost:5173",
-  "http://localhost:3000",
-];
+/* =========================================================
+   CORS CONFIGURATION
+   ========================================================= */
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests without an Origin header
-      // (Postman, server-to-server requests, etc.)
-      if (!origin) {
-        return callback(null, true);
-      }
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests without Origin header.
+    // Example: Postman, server-to-server requests, etc.
+    if (!origin) {
+      return callback(null, true);
+    }
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    // Allow all Vercel deployments
+    if (origin.endsWith(".vercel.app")) {
+      console.log("✅ CORS allowed:", origin);
+      return callback(null, true);
+    }
 
-      console.log("❌ CORS blocked origin:", origin);
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+    // Allow local development
+    if (
+      origin === "http://localhost:5173" ||
+      origin === "http://localhost:3000"
+    ) {
+      console.log("✅ CORS allowed:", origin);
+      return callback(null, true);
+    }
 
-app.options(
-  "*",
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) {
-        return callback(null, true);
-      }
+    // Block unknown origins
+    console.log("❌ CORS blocked origin:", origin);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    // Return false instead of throwing an error.
+    // This prevents the CORS middleware from generating
+    // an unwanted server error response.
+    return callback(null, false);
+  },
 
-      console.log("❌ CORS blocked origin:", origin);
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+  credentials: true,
+
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
+  allowedHeaders: ["Content-Type", "Authorization"],
+
+  optionsSuccessStatus: 204,
+};
+
+// Apply CORS globally.
+// This also handles OPTIONS preflight requests.
+app.use(cors(corsOptions));
+
+/* =========================================================
+   BODY PARSING
+   ========================================================= */
 
 app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
+
+/* =========================================================
+   STATIC FILES
+   ========================================================= */
+
 app.use("/uploads", express.static(uploadDir));
 
+/* =========================================================
+   HEALTH CHECK
+   ========================================================= */
+
 app.get("/api/health", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: "Label Creator Pro API is running",
     timestamp: new Date().toISOString(),
   });
 });
 
-// API routes
+/* =========================================================
+   API ROUTES
+   ========================================================= */
+
 app.use("/api/auth", authRoutes);
+
 app.use("/api/users", userRoutes);
+
 app.use("/api/labels", labelRoutes);
+
 app.use("/api/templates", templateRoutes);
+
 app.use("/api/prints", printRoutes);
+
 app.use("/api/settings", settingRoutes);
+
 app.use("/api/categories", categoryRoutes);
+
 app.use("/api/import", importRoutes);
+
 app.use("/api/render", renderRoutes);
 
-// 404 for unknown API routes
+/* =========================================================
+   API 404 HANDLER
+   ========================================================= */
+
 app.use("/api", (req, res, next) => {
   next(
     new AppError(
@@ -112,7 +143,14 @@ app.use("/api", (req, res, next) => {
   );
 });
 
-// Global error handler
+/* =========================================================
+   GLOBAL ERROR HANDLER
+   ========================================================= */
+
 app.use(errorHandler);
+
+/* =========================================================
+   EXPORT APP
+   ========================================================= */
 
 module.exports = app;
